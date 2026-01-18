@@ -1,0 +1,9 @@
+{
+  "name": "yt-dlp",
+  "version": "1.0.0",
+  "author": "Nicolas BOGALHEIRO",
+  "license": "ISC",
+  "dependencies": {
+    "unzipper": "^0.12.3"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Link Scraper",
+  "author": "Nicolas BOGALHEIRO",
+  "version": "1.0",
+  "description": "Get all YouTube video links (https://www.youtube.com/watch?v=X) from the active tab",
+  "permissions": ["activeTab", "scripting", "nativeMessaging"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+	"default_icon": "icon.png"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}

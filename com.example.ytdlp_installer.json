@@ -1,0 +1,9 @@
+{
+  "name": "com.example.ytdlp_installer",
+  "description": "Install YT-DLP",
+  "path": "C:\\yt-dlp\\host.cmd",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://kkkecnkcclgpmpemghnpldifblmmhepc/"
+  ]
+}
