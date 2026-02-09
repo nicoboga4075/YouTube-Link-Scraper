@@ -8,14 +8,6 @@ chrome.runtime.sendMessage({ command: "handcheck" }, (response) => {
 	}
 });
 
-fetch(chrome.runtime.getURL("host.log"))
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.trim().split("\n");
-    const last  = lines[lines.length - 1];
-	alert(last);
-});
-
 async function runScraper() {
   try {
 	  saveBtn.disabled = true;	
@@ -42,36 +34,70 @@ async function runScraper() {
 			  return null;
 			}
 		  }
-		  return new Promise((resolve) => {
+		  function durationToMinutes(durationStr) {
+			  if (!durationStr) return 0;
+			  const parts = durationStr.split(':').map(p => parseInt(p.trim(), 10));
+			  if (parts.length === 2) { // mm:ss
+				return parts[0] + parts[1] / 60;
+			  } else if (parts.length === 3) { // hh:mm:ss
+				return parts[0] * 60 + parts[1] + parts[2] / 60;
+			  }
+			  return 0;
+		  }
+		  return new Promise((resolve, reject) => {
 			try {
-				let lastCount = 0;
-				let sameCountTime = 0;
-				const checkInterval = 500;
-				const maxIdle = 4000;
-				const step = () => {
-				  try {
-					  window.scrollBy(0, 3000);
-					  const links = Array.from(document.querySelectorAll("a"))
-						.map(a => cleanUrl(a.href))
-						.filter(Boolean);
-					  const uniqueLinks = [...new Set(links)];
-					  chrome.runtime.sendMessage({ type: "YT_SCRAPER_PROGRESS", count: uniqueLinks.length });
-					  if (uniqueLinks.length === lastCount) {
-						sameCountTime += checkInterval;
-					  } else {
-						lastCount = uniqueLinks.length;
-						sameCountTime = 0;
-					  }
-					  if (sameCountTime >= maxIdle) {
-						resolve(uniqueLinks);
-					  } else {
-						setTimeout(step, checkInterval);
-					  }
-				  } catch (err) { reject(err); }
-				};
-				step();
-			} catch (err) { reject(err); }
-		  });
+			  const seenUrls = new Set();
+			  
+			  let lastCount = 0;
+			  let sameCountTime = 0;
+			  const checkInterval = 500;
+			  const maxIdle = 4000;
+
+			  const step = () => {
+				try {
+				  window.scrollBy(0, 3000);
+
+				  document.querySelectorAll('ytd-playlist-video-renderer').forEach(el => {
+					const a = el.querySelector('a#video-title');
+					if (!a) return;
+
+					const url = cleanUrl(a.href);
+					if (!url) return;
+
+					const title = a.textContent.trim();
+					const artist = el.querySelector('ytd-channel-name #text a')?.textContent.trim();;
+					const duration = el.querySelector('ytd-thumbnail-overlay-time-status-renderer')?.textContent.trim().split('\n')[0].trim();;
+
+					seenUrls.add(JSON.stringify({ url, title, artist, duration }));
+				  });
+
+				  chrome.runtime.sendMessage({
+					type: "YT_SCRAPER_PROGRESS",
+					count: seenUrls.size
+				  });
+
+				  if (seenUrls.size === lastCount) {
+					sameCountTime += checkInterval;
+				  } else {
+					lastCount = seenUrls.size;
+					sameCountTime = 0;
+				  }
+
+				  if (sameCountTime >= maxIdle) {
+					const results = [...seenUrls].map(s => JSON.parse(s));
+					resolve(results);
+				  } else {
+					setTimeout(step, checkInterval);
+				  }
+				} catch (err) {
+				  reject(err);
+				}
+			  };
+			  step();
+			} catch (err) {
+			  reject(err);
+			}
+          });
 		}
 	  }, (results) => {
 		if (!results || !results[0]) {
@@ -79,7 +105,8 @@ async function runScraper() {
 			statusTerminal.textContent = `Status: Error`;
 			return;
 		}
-		const urls = results[0].result;
+		window.scraperResults = results[0].result;
+		const urls = results[0].result.map(result => result.url);
 		outputTerminal.value = urls.join("\n");
 		statusTerminal.textContent = `Status: ${urls.length} videos found`;
 		saveBtn.disabled = urls.length === 0;
@@ -111,8 +138,9 @@ saveBtn.addEventListener("click", () => {
 });
 
 installBtn.addEventListener("click", () => {
+  installBtn.disabled = true;
   saveBtn.disabled = true;
-  outputTerminal.value = "";
+  outputTerminal.value = "> Installation of Node.js if needed and tools...\n";
   statusTerminal.textContent = `Status: Installation pending...`;
   const port = chrome.runtime.connectNative("com.example.ytdlp_installer");
   port.postMessage({ command: "install" });
@@ -120,6 +148,10 @@ installBtn.addEventListener("click", () => {
     if (msg.message) {
 		if (msg.message === "ALL_TOOLS_INSTALLED") {
 			statusTerminal.textContent = `Status: Installation finished`;
+			installBtn.disabled = false;
+			let lines = outputTerminal.value.split("\n");
+			lines.shift();
+			outputTerminal.value = lines.join("\n");
             port.disconnect();
             return;
         }
@@ -131,6 +163,16 @@ installBtn.addEventListener("click", () => {
     if (chrome.runtime.lastError) {
         outputTerminal.value += "> " + chrome.runtime.lastError.message + "\n";
 		statusTerminal.textContent = `Status: Error`;
+		fetch(chrome.runtime.getURL("host.log"))
+		  .then(res => res.text())
+		  .then(text => {
+			const lines = text.trim().split("\n");
+			const lastRecord  = lines[lines.length - 1];
+			if (lastRecord.toLowerCase().includes('node') || lastRecord.includes('fichier de commandes.') || lastRecord.includes('batch file.')) {
+			  outputTerminal.value += "> Check if Node.js is installed and well recognized or used on your laptop.\n";
+			}
+		});
     }
+	installBtn.disabled = false;
   });
 });
