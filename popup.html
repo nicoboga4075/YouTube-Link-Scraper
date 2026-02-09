@@ -9,48 +9,53 @@
 		  box-sizing: border-box;
 		  font-family: Poppins;
 		}
+		:root {
+		  --primary-color: #00ff00;
+		  --secondary-color: #ffff00;
+		  --background-color: black;
+		}
 		body {
 		  margin: 0;
-		  background: black;
-		  color: #00ff00;
+		  background: var(--background-color);
+		  color: var(--primary-color);
 		  width: 380px;
 		  padding: 10px;
 		}
 		h1 {
 		  font-size: 14px;
-		  color: #00ff00;
+		  color: var(--primary-color);
 		  text-align: center;
 		  margin-bottom: 10px;
-		  text-shadow: 0 0 8px #00ff00;
+		  text-shadow: 0 0 8px var(--primary-color);
 		}
 		textarea {
 		  width: 100%;
 		  height: 190px;
-		  background: black;
-		  color: #00ff00;
-		  border: 1px solid #00ff00;
+		  background: var(--background-color);
+		  color: var(--primary-color);
+		  border: 1px solid var(--primary-color);
 		  resize: none;
 		  padding: 6px;
 		  font-size: 11px;
-		  box-shadow: 0 0 10px #00ff00 inset;
+		  box-shadow: 0 0 10px var(--primary-color) inset;
 		  overflow-y: auto;
 		}
 		button {
 		  width: 100%;
 		  margin-top: 8px;
 		  padding: 8px;
-		  background: black;
-		  color: #00ff00;
-		  border: 1px solid #00ff00;
+		  background: var(--background-color);
+		  color: var(--primary-color);
+		  border: 1px solid var(--primary-color);
 		  cursor: pointer;
 		  font-size: 12px;
-		  text-shadow: 0 0 5px #00ff00;
-		  box-shadow: 0 0 10px #00ff00;
+		  text-shadow: 0 0 5px var(--primary-color);
+		  box-shadow: 0 0 10px var(--primary-color);
 		}
 		button:hover {
-		  background: #00ff00;
-		  color: black;
-		  box-shadow: 0 0 20px #00ff00;
+		  background: var(--primary-color);
+		  color: var(--background-color);
+		  box-shadow: 0 0 20px var(--primary-color);
 		}
 		button:disabled {
 		  opacity: 0.5;
@@ -59,14 +64,14 @@
 		#statusTerminal {
 		  margin-top: 6px;
 		  font-size: 11px;
-		  color: #ffff00;
-		  text-shadow: 0 0 5px #ffff00;
+		  color: var(--secondary-color);
+		  text-shadow: 0 0 5px var(--secondary-color);
 		  text-align: center;
 		}
 		#extensionIcon {
 		  display:block;
 		  margin:0 auto 8px;
-		  filter:drop-shadow(0 0 6px #00ff00);
+		  filter:drop-shadow(0 0 6px var(--primary-color));
 		  width: 128px;
 		}
 		</style>

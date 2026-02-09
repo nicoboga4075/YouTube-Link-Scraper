@@ -10,7 +10,8 @@ chrome.runtime.sendMessage({ command: "handcheck" }, (response) => {
 
 async function runScraper() {
   try {
-	  saveBtn.disabled = true;	
+	  scanBtn.disabled = true;
+	  saveBtn.disabled = true;
 	  installBtn.disabled = true;
 	  outputTerminal.value = "> Please wait...\n";
 	  statusTerminal.textContent = `Status: Scanning`;
@@ -46,7 +47,7 @@ async function runScraper() {
 		  }
 		  return new Promise((resolve, reject) => {
 			try {
-			  const seenUrls = new Set();
+			  const seenVideos = new Map();
 			  
 			  let lastCount = 0;
 			  let sameCountTime = 0;
@@ -68,23 +69,23 @@ async function runScraper() {
 					const artist = el.querySelector('ytd-channel-name #text a')?.textContent.trim();;
 					const duration = el.querySelector('ytd-thumbnail-overlay-time-status-renderer')?.textContent.trim().split('\n')[0].trim();;
 
-					seenUrls.add(JSON.stringify({ url, title, artist, duration }));
+					seenVideos.set(url, { url, title, artist, duration });
 				  });
 
 				  chrome.runtime.sendMessage({
 					type: "YT_SCRAPER_PROGRESS",
-					count: seenUrls.size
+					count: seenVideos.size
 				  });
 
-				  if (seenUrls.size === lastCount) {
+				  if (seenVideos.size === lastCount) {
 					sameCountTime += checkInterval;
 				  } else {
-					lastCount = seenUrls.size;
+					lastCount = seenVideos.size;
 					sameCountTime = 0;
 				  }
 
 				  if (sameCountTime >= maxIdle) {
-					const results = [...seenUrls].map(s => JSON.parse(s));
+					const results = [...seenVideos.values()];
 					resolve(results);
 				  } else {
 					setTimeout(step, checkInterval);
@@ -110,11 +111,14 @@ async function runScraper() {
 		outputTerminal.value = urls.join("\n");
 		statusTerminal.textContent = `Status: ${urls.length} videos found`;
 		saveBtn.disabled = urls.length === 0;
+		scanBtn.disabled = false; 
 		installBtn.disabled = false;
 	  });
 	} catch (err) { 
 		outputTerminal.value += "> " +  err.message + "\n";;
-		statusTerminal.textContent = `Status: Error`; 
+		statusTerminal.textContent = `Status: Error`;
+		scanBtn.disabled = false; 
+		installBtn.disabled = false;		
 	}
 }
 
@@ -139,6 +143,7 @@ saveBtn.addEventListener("click", () => {
 
 installBtn.addEventListener("click", () => {
   installBtn.disabled = true;
+  scanBtn.disabled = true;
   saveBtn.disabled = true;
   outputTerminal.value = "> Installation of Node.js if needed and tools...\n";
   statusTerminal.textContent = `Status: Installation pending...`;
@@ -149,6 +154,7 @@ installBtn.addEventListener("click", () => {
 		if (msg.message === "ALL_TOOLS_INSTALLED") {
 			statusTerminal.textContent = `Status: Installation finished`;
 			installBtn.disabled = false;
+			scanBtn.disabled = false;
 			let lines = outputTerminal.value.split("\n");
 			lines.shift();
 			outputTerminal.value = lines.join("\n");
@@ -174,5 +180,6 @@ installBtn.addEventListener("click", () => {
 		});
     }
 	installBtn.disabled = false;
+	scanBtn.disabled = false;
   });
 });
