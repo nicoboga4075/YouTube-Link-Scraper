@@ -3,4 +3,6 @@ downloads
 urls.txt
 extension.crx
 extension.pem
-host.log
+*.log
+*.bak
+*.old
